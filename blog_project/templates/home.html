@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<section class="hero">
+    <img src="https://images.unsplash.com/photo-1499750310159-525446199531?q=80&w=2070&auto=format&fit=crop"
+        class="hero-bg" alt="Background">
+    <div class="hero-content">
+        <h1>Share Your Story With The World</h1>
+        <p>Discover expert insights, lifestyle tips, and inspiring stories from writers around the globe.</p>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'register' %}" class="btn" style="font-size: 1.1rem; padding: 0.8rem 2rem;">Start Writing</a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Blog Grid -->
+<h2 style="font-size: 2rem; margin-bottom: 2rem; border-left: 5px solid var(--accent); padding-left: 1rem;">Trending
+    Posts</h2>
+<div class="blog-grid">
+    {% for blog in blogs %}
+    <div class="blog-card">
+        <a href="{% url 'blog_detail' blog.slug %}" class="card-img-wrapper">
+            {% if blog.image %}
+            <img src="{{ blog.image.url }}" alt="{{ blog.title }}" class="blog-img">
+            {% else %}
+            <div class="blog-img" style="display:flex;align-items:center;justify-content:center;background:#21262d;">No
+                Image</div>
+            {% endif %}
+            <span class="category-tag">{{ blog.get_category_display }}</span>
+        </a>
+        <div class="blog-content">
+            <div class="blog-meta">
+                <div class="author-info">
+                    {% if blog.author.userprofile.profile_picture %}
+                    <img src="{{ blog.author.userprofile.profile_picture.url }}" class="author-avatar-small">
+                    {% else %}
+                    <div class="author-avatar-small" style="background:#333;"></div>
+                    {% endif %}
+                    <span>{{ blog.author.username }}</span>
+                </div>
+                <span>{{ blog.created_at|date:"M d" }}</span>
+            </div>
+            <h3 class="blog-title"><a href="{% url 'blog_detail' blog.slug %}">{{ blog.title }}</a></h3>
+            <div style="flex-grow: 1;"></div>
+            <div
+                style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; color: var(--text-secondary); font-size: 0.8rem;">
+                <span>{{ blog.view_count }} Views</span>
+                <a href="{% url 'blog_detail' blog.slug %}" style="color: var(--accent); font-weight: bold;">Read More
+                    &rarr;</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+        <h3>No stories yet.</h3>
+        <p>Be the voice that starts the conversation.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

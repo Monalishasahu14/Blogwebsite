@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="profile-header">
+    <div style="position: relative; display: inline-block;">
+        {% if profile.profile_picture %}
+        <img src="{{ profile.profile_picture.url }}" alt="Profile" class="profile-pic" id="current-profile-pic"
+            onerror="this.src='https://ui-avatars.com/api/?name={{ user.username }}&background=random'">
+        {% else %}
+        <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=random" class="profile-pic"
+            id="current-profile-pic">
+        {% endif %}
+        <button onclick="document.getElementById('id_profile_picture').click()"
+            style="position: absolute; bottom: 10px; right: 10px; background: var(--accent); border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5);"
+            title="Change Avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="feather feather-camera">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+        </button>
+    </div>
+
+    <h1 class="profile-name">{{ user.username }}</h1>
+    <p class="profile-bio">{{ profile.bio|default:"No bio yet. Tell the world who you are!" }}</p>
+
+    <button onclick="toggleEditForm()" class="btn btn-outline" id="edit-btn">Edit Profile</button>
+
+    <div id="edit-profile-form" style="display: none; max-width: 500px; margin: 2rem auto; text-align: left;"
+        class="form-container">
+        <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Edit Profile
+        </h3>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="form-group" style="text-align: center;">
+                <label for="id_profile_picture" style="cursor: pointer; display: block; margin-bottom: 1rem;">
+                    <span style="color: var(--accent);">Tap camera icon above to select new image</span>
+                </label>
+                <!-- Hide actual file input, triggered by camera button -->
+                <input type="file" name="profile_picture" accept="image/*" class="form-input" id="id_profile_picture"
+                    style="display: none;" onchange="previewImage(this)">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Bio</label>
+                {{ form.bio }}
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" onclick="toggleEditForm()" class="btn btn-outline">Cancel</button>
+                <button type="submit" class="btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleEditForm() {
+        var form = document.getElementById('edit-profile-form');
+        var btn = document.getElementById('edit-btn');
+        if (form.style.display === 'none') {
+            form.style.display = 'block';
+            btn.style.display = 'none';
+        } else {
+            form.style.display = 'none';
+            btn.style.display = 'inline-block';
+        }
+    }
+
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('current-profile-pic').src = e.target.result;
+                // Also open form if not open
+                var form = document.getElementById('edit-profile-form');
+                if (form.style.display === 'none') {
+                    toggleEditForm();
+                }
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+
+<h2 style="margin-bottom: 2rem;">My Stories</h2>
+<div class="blog-grid">
+    {% for blog in user.blogpost_set.all %}
+    <div class="blog-card">
+        <a href="{% url 'blog_detail' blog.slug %}" class="card-img-wrapper">
+            {% if blog.image %}
+            <img src="{{ blog.image.url }}" alt="{{ blog.title }}" class="blog-img">
+            {% endif %}
+        </a>
+        <div class="blog-content">
+            <h3 class="blog-title">{{ blog.title }}</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">{{ blog.created_at|date:"M d, Y" }}</p>
+            <div style="margin-top: 1rem; display: flex; gap: 10px;">
+                <a href="{% url 'edit_blog' blog.slug %}" class="btn"
+                    style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">Edit</a>
+                <a href="{% url 'delete_blog' blog.slug %}" class="btn btn-danger"
+                    style="font-size: 0.8rem; padding: 0.4rem 0.8rem;"
+                    onclick="return confirm('Delete this post?')">Delete</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p>You haven't written any stories yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}
